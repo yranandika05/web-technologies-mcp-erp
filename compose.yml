@@ -1,0 +1,129 @@
+# Adapted from frappe/frappe_docker (MIT); see docker/erpnext/README.md.
+name: mcp-erpnext
+
+x-erpnext: &erpnext
+  image: frappe/erpnext:${ERPNEXT_VERSION:?Set ERPNEXT_VERSION in .env}
+  platform: ${ERPNEXT_PLATFORM:-linux/amd64}
+  restart: unless-stopped
+  volumes:
+    - sites:/home/frappe/frappe-bench/sites
+    - logs:/home/frappe/frappe-bench/logs
+
+x-runtime: &runtime
+  <<: *erpnext
+  depends_on:
+    db:
+      condition: service_healthy
+    redis-cache:
+      condition: service_healthy
+    redis-queue:
+      condition: service_healthy
+
+services:
+  db:
+    image: mariadb:${MARIADB_VERSION:?Set MARIADB_VERSION in .env}
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --innodb-snapshot-isolation=OFF
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env}
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      start_period: 30s
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis-cache:
+    image: redis:${REDIS_VERSION:?Set REDIS_VERSION in .env}
+    restart: unless-stopped
+    healthcheck: &redis-healthcheck
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis-queue:
+    image: redis:${REDIS_VERSION:?Set REDIS_VERSION in .env}
+    restart: unless-stopped
+    command: [redis-server, --appendonly, 'yes']
+    volumes:
+      - redis-queue-data:/data
+    healthcheck: *redis-healthcheck
+
+  configurator:
+    <<: *erpnext
+    profiles: [setup]
+    restart: 'no'
+    entrypoint: [bash, /opt/workshop/configure.sh]
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+      - ./docker/erpnext/configure.sh:/opt/workshop/configure.sh:ro
+
+  create-site:
+    <<: *erpnext
+    profiles: [setup]
+    restart: 'no'
+    entrypoint: [bash, /opt/workshop/init-site.sh]
+    environment:
+      SITE_NAME: ${SITE_NAME:?Set SITE_NAME in .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      ERPNEXT_BASE_URL: ${ERPNEXT_BASE_URL:?Set ERPNEXT_BASE_URL in .env}
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+      - ./docker/erpnext/init-site.sh:/opt/workshop/init-site.sh:ro
+
+  backend:
+    <<: *runtime
+
+  frontend:
+    <<: *erpnext
+    command: [nginx-entrypoint.sh]
+    environment:
+      BACKEND: backend:8000
+      SOCKETIO: websocket:9000
+      FRAPPE_SITE_NAME_HEADER: ${SITE_NAME:?Set SITE_NAME in .env}
+      PROXY_READ_TIMEOUT: '120'
+      CLIENT_MAX_BODY_SIZE: 50m
+    ports:
+      - '127.0.0.1:${HTTP_PORT:-8080}:8080'
+    depends_on:
+      - backend
+      - websocket
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, http://127.0.0.1:8080/api/method/ping]
+      start_period: 60s
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  websocket:
+    <<: *runtime
+    command: [node, /home/frappe/frappe-bench/apps/frappe/socketio.js]
+
+  queue-short:
+    <<: *runtime
+    command: [bench, worker, --queue, 'short,default']
+
+  queue-long:
+    <<: *runtime
+    command: [bench, worker, --queue, 'long,default,short']
+
+  scheduler:
+    <<: *runtime
+    command: [bench, schedule]
+
+volumes:
+  db-data:
+  sites:
+  logs:
+  redis-queue-data:

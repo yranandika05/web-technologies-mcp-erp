@@ -1,11 +1,11 @@
-# Local dependencies
+# External ERP runtimes, dependencies, site configuration, logs and data
 .local/
 
 # Node.js
 node_modules/
 dist/
 
-# Environment variables
+# Environment variables (.env.example remains tracked)
 .env
 .env.local
 .env.*.local
