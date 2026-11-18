@@ -25,6 +25,20 @@ test('parses stdio servers and resolves cwd relative to the config directory', (
   assert.deepEqual(weather.env, { API_KEY: 'x' });
 });
 
+test('${VAR} placeholders in env are filled from the host environment', () => {
+  const [server] = parseServersConfig({
+    mcpServers: { a: { command: 'x', env: { URL: '${ERP_URL}/api', PLAIN: 'value' } } },
+  }, '/tmp', { ERP_URL: 'http://localhost:8080' });
+  assert.deepEqual(server.env, { URL: 'http://localhost:8080/api', PLAIN: 'value' });
+});
+
+test('missing placeholder variables give a readable error', () => {
+  assert.throws(
+    () => parseServersConfig({ mcpServers: { a: { command: 'x', env: { KEY: '${NOT_SET}' } } } }, '/tmp', {}),
+    /NOT_SET.*"a"/s,
+  );
+});
+
 test('disabled servers are skipped', () => {
   const servers = parseServersConfig({
     mcpServers: { a: { command: 'x' }, b: { command: 'y', disabled: true } },

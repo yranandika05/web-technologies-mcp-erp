@@ -15,6 +15,8 @@ export interface NimConfig {
 export interface HostConfig {
   nim: NimConfig;
   port: number;
+  /** Origins allowed to show the chat in an iframe (the ERPNext UI). */
+  frameAncestors: string[];
 }
 
 const HOSTED_NIM = 'https://integrate.api.nvidia.com/v1';
@@ -47,5 +49,17 @@ export function readHostConfig(env: NodeJS.ProcessEnv = process.env): HostConfig
     throw new ConfigError(`CHAT_HOST_PORT must be a port number, got: ${rawPort}`);
   }
 
-  return { nim: { baseUrl, apiKey, model: value('NIM_MODEL') ?? DEFAULT_MODEL }, port };
+  const erpnextUrl = value('ERPNEXT_BASE_URL') ?? 'http://localhost:8080';
+  let erpnextOrigin: string;
+  try {
+    erpnextOrigin = new URL(erpnextUrl).origin;
+  } catch {
+    throw new ConfigError(`ERPNEXT_BASE_URL is not a valid URL: ${erpnextUrl}`);
+  }
+
+  return {
+    nim: { baseUrl, apiKey, model: value('NIM_MODEL') ?? DEFAULT_MODEL },
+    port,
+    frameAncestors: [erpnextOrigin],
+  };
 }

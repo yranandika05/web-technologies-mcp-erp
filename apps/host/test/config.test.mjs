@@ -22,6 +22,11 @@ test('uses the hosted NIM endpoint, default model and port 3000 when unset', () 
   assert.equal(config.port, 3000);
 });
 
+test('ERPNext origin from ERPNEXT_BASE_URL may embed the chat', () => {
+  assert.deepEqual(readHostConfig({ NIM_API_KEY: 'x' }).frameAncestors, ['http://localhost:8080']);
+  assert.deepEqual(readHostConfig({ NIM_API_KEY: 'x', ERPNEXT_BASE_URL: 'https://erp.example.test/app' }).frameAncestors, ['https://erp.example.test']);
+});
+
 test('API key is optional for a self-hosted NIM', () => {
   const config = readHostConfig({ NIM_BASE_URL: 'http://localhost:8000/v1' });
   assert.equal(config.nim.apiKey, undefined);

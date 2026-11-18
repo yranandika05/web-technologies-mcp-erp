@@ -28,7 +28,21 @@ const fileSchema = z.object({
   })),
 });
 
-export function parseServersConfig(data: unknown, baseDir: string): ServerConfig[] {
+/**
+ * Only the variables listed under "env" are passed to a server (plus a minimal default
+ * environment). Values may reference host variables from the repository .env: "${NAME}".
+ */
+function interpolate(value: string, server: string, env: NodeJS.ProcessEnv): string {
+  return value.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (_, name: string) => {
+    const resolved = env[name];
+    if (resolved === undefined || resolved === '') {
+      throw new ConfigError(`Variable ${name} used by MCP server "${server}" is not set. Add it to the repository .env.`);
+    }
+    return resolved;
+  });
+}
+
+export function parseServersConfig(data: unknown, baseDir: string, env: NodeJS.ProcessEnv = process.env): ServerConfig[] {
   const parsed = fileSchema.safeParse(data);
   if (!parsed.success) {
     const issues = parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ');
@@ -41,7 +55,7 @@ export function parseServersConfig(data: unknown, baseDir: string): ServerConfig
       // "node" means the Node binary running the host – avoids PATH problems on Windows.
       command: server.command === 'node' ? process.execPath : server.command,
       args: server.args,
-      env: server.env,
+      env: Object.fromEntries(Object.entries(server.env).map(([key, value]) => [key, interpolate(value, name, env)])),
       cwd: resolve(baseDir, server.cwd ?? '.'),
     }));
 }

@@ -2,7 +2,12 @@
   "mcpServers": {
     "erpnext": {
       "command": "node",
-      "args": ["../../packages/mcp-server/dist/index.js"]
+      "args": ["../../packages/mcp-server/dist/index.js"],
+      "env": {
+        "ERPNEXT_BASE_URL": "${ERPNEXT_BASE_URL}",
+        "ERPNEXT_API_KEY": "${ERPNEXT_API_KEY}",
+        "ERPNEXT_API_SECRET": "${ERPNEXT_API_SECRET}"
+      }
     }
   }
 }
