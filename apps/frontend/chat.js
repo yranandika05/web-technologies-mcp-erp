@@ -10,6 +10,7 @@ const sendButton = document.querySelector('#send');
 let history = [];
 
 loadStatus();
+listenForTheme();
 
 form.addEventListener('submit', event => {
   event.preventDefault();
@@ -105,6 +106,32 @@ function addMessage(kind, text) {
 
 function setBusy(busy) {
   sendButton.disabled = busy;
+}
+
+/**
+ * Inside ERPNext the launcher (erpnext-launcher.js) sends ERPNext's theme so the chat uses the same
+ * colours: { type: 'mcp-chat-theme', theme: 'light' | 'dark', vars: { '--bg': '#fff', ... } }.
+ * Only the embedding page may send it (who may embed the chat is limited by the host's CSP).
+ */
+const THEME_VARS = ['--bg', '--surface', '--text', '--muted', '--border', '--accent', '--accent-text',
+  '--user-bg', '--error', '--error-bg', '--code-bg', '--radius', '--font'];
+
+function listenForTheme() {
+  window.addEventListener('message', event => {
+    const data = event.data;
+    if (event.source !== window.parent || window.parent === window || data?.type !== 'mcp-chat-theme') return;
+    const root = document.documentElement;
+    root.dataset.theme = data.theme === 'dark' ? 'dark' : 'light';
+    for (const name of THEME_VARS) {
+      const value = data.vars?.[name];
+      // Plain values only: no url() or other tricks to load resources.
+      if (typeof value === 'string' && value && value.length < 300 && !/[;{}<>]|url\(/i.test(value)) {
+        root.style.setProperty(name, value);
+      } else {
+        root.style.removeProperty(name);
+      }
+    }
+  });
 }
 
 async function loadStatus() {

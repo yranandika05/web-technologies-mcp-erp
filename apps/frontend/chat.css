@@ -1,31 +1,53 @@
+/* Colours follow the ERPNext desk. Inside ERPNext the launcher (erpnext-launcher.js) sends the
+   current ERPNext theme and its CSS variables; chat.js applies them. These values are only the
+   defaults (ERPNext light/dark) for loading and for running the chat on its own. */
 :root {
-  --bg: #f8f9fa;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --text: #1f272e;
-  --muted: #6b7785;
-  --border: #e2e6e9;
-  --accent: #2490ef;
+  --text: #171717;
+  --muted: #525252;
+  --border: #ededed;
+  --accent: #171717;
   --accent-text: #ffffff;
-  --user-bg: #e8f2fd;
-  --error: #c0392b;
-  --error-bg: #fdecea;
-  --code-bg: #f1f3f5;
-  color-scheme: light dark;
+  --user-bg: #f3f3f3;
+  --error: #ce2c2c;
+  --error-bg: #fff5f5;
+  --code-bg: #f8f8f8;
+  --radius: 8px;
+  --font: "InterVariable", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  color-scheme: light;
 }
 
+:root[data-theme="dark"] {
+  --bg: #171717;
+  --surface: #232323;
+  --text: #f8f8f8;
+  --muted: #c7c7c7;
+  --border: #2e2e2e;
+  --accent: #f8f8f8;
+  --accent-text: #171717;
+  --user-bg: #2e2e2e;
+  --error: #ff7575;
+  --error-bg: #3a2020;
+  --code-bg: #1c1c1c;
+  color-scheme: dark;
+}
+
+/* Fallback when the chat runs on its own (no theme from ERPNext). */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #171a1d;
-    --surface: #1f2327;
-    --text: #e6e8ea;
-    --muted: #9aa4ae;
-    --border: #343a40;
-    --accent: #4aa3f5;
-    --accent-text: #0b1520;
-    --user-bg: #1d3247;
-    --error: #ff8a7a;
+  :root:not([data-theme]) {
+    --bg: #171717;
+    --surface: #232323;
+    --text: #f8f8f8;
+    --muted: #c7c7c7;
+    --border: #2e2e2e;
+    --accent: #f8f8f8;
+    --accent-text: #171717;
+    --user-bg: #2e2e2e;
+    --error: #ff7575;
     --error-bg: #3a2020;
-    --code-bg: #2a2f34;
+    --code-bg: #1c1c1c;
+    color-scheme: dark;
   }
 }
 
@@ -38,7 +60,7 @@ body {
   flex-direction: column;
   background: var(--bg);
   color: var(--text);
-  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 13px/1.5 var(--font);
 }
 
 .header {
@@ -79,7 +101,7 @@ h1 { margin: 0; font-size: 16px; }
 .message {
   max-width: 85%;
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--surface);
   border: 1px solid var(--border);
   white-space: pre-wrap;
@@ -119,7 +141,7 @@ textarea {
   resize: none;
   padding: 8px 10px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--bg);
   color: var(--text);
   font: inherit;
@@ -129,7 +151,7 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 button {
   padding: 8px 14px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--accent);
   color: var(--accent-text);
   font: inherit;
