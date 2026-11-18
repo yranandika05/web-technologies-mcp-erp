@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ERP Chat</title>
+  <link rel="stylesheet" href="chat.css">
+</head>
+<body>
+  <header class="header">
+    <div>
+      <h1>ERP Chat</h1>
+      <p class="subtitle" id="model">Verbinde …</p>
+    </div>
+    <button type="button" id="reset" class="secondary" title="Neues Gespräch">Neu</button>
+  </header>
+
+  <!-- Connected MCP servers and their tools, filled from GET /api/status -->
+  <details class="servers" id="servers">
+    <summary>MCP-Server</summary>
+    <ul id="server-list"></ul>
+  </details>
+
+  <main id="messages" class="messages" aria-live="polite">
+    <p class="hint">Frag z. B. „Wie viel Bestand gibt es von MCP-EL-001?“</p>
+  </main>
+
+  <form id="form" class="composer">
+    <textarea id="input" rows="2" placeholder="Nachricht … (Enter senden, Shift+Enter neue Zeile)" required></textarea>
+    <button type="submit" id="send">Senden</button>
+  </form>
+
+  <script src="chat.js" type="module"></script>
+</body>
+</html>
