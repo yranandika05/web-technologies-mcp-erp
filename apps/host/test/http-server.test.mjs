@@ -4,7 +4,8 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { createChatServer } from '../dist/http-server.js';
+import { createServer } from 'node:http';
+import { createChatServer, listenOnLocalhost } from '../dist/http-server.js';
 import { LlmError } from '../dist/llm/provider.js';
 
 const staticDir = mkdtempSync(join(tmpdir(), 'mcp-host-static-'));
@@ -88,4 +89,26 @@ test('LLM errors become 502 with a readable message, other errors a generic 500'
   const crashed = await postChat(crash.base, { messages: [{ role: 'user', content: 'x' }] });
   assert.equal(crashed.status, 500);
   assert.doesNotMatch((await crashed.json()).error, /secret/);
+});
+
+test('listenOnLocalhost explains a port that is already in use', async t => {
+  const blocker = createServer();
+  blocker.listen(0, '127.0.0.1');
+  await once(blocker, 'listening');
+  t.after(() => blocker.close());
+  const { port } = blocker.address();
+
+  const server = createChatServer({ llm: {}, tools, staticDir, model: 'test-model', frameAncestors: [] });
+  await assert.rejects(listenOnLocalhost(server, port), error => {
+    assert.match(error.message, new RegExp(`Port ${port} is already in use`));
+    assert.match(error.message, /CHAT_HOST_PORT/);
+    return true;
+  });
+});
+
+test('listenOnLocalhost resolves once the server listens on 127.0.0.1', async () => {
+  const server = createChatServer({ llm: {}, tools, staticDir, model: 'test-model', frameAncestors: [] });
+  await listenOnLocalhost(server, 0);
+  assert.equal(server.address().address, '127.0.0.1');
+  server.close();
 });

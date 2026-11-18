@@ -4,6 +4,7 @@ import { extname, join, normalize, sep } from 'node:path';
 import { z } from 'zod/v4';
 import { runChat, type ToolExecutor } from './chat.js';
 import type { ServerStatus } from './client-manager.js';
+import { ConfigError } from './config.js';
 import { LlmError, type LlmProvider } from './llm/provider.js';
 
 export interface ChatServerOptions {
@@ -122,4 +123,27 @@ async function readBody(req: IncomingMessage): Promise<string> {
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(body));
+}
+
+/**
+ * Starts the server on 127.0.0.1 only (the chat can use the ERP credentials of the MCP servers).
+ * Turns the common "port already in use" error into a message that says what to do.
+ */
+export function listenOnLocalhost(server: Server, port: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const onError = (error: NodeJS.ErrnoException) => {
+      server.off('listening', onListening);
+      reject(error.code === 'EADDRINUSE'
+        ? new ConfigError(`Port ${port} is already in use – is the chat host already running (e.g. in another terminal)? `
+          + 'Stop it, or set another port via CHAT_HOST_PORT in the repository .env.')
+        : error);
+    };
+    const onListening = () => {
+      server.off('error', onError);
+      resolve();
+    };
+    server.once('error', onError);
+    server.once('listening', onListening);
+    server.listen(port, '127.0.0.1');
+  });
 }
