@@ -95,7 +95,7 @@ curl --fail-with-body --get "$ERPNEXT_BASE_URL/api/resource/Item" \
   -H "Authorization: token $ERPNEXT_API_KEY:$ERPNEXT_API_SECRET"
 ```
 
-An empty Item list means no permitted test Item was retrieved. See the [Frappe REST reference](https://docs.frappe.io/framework/user/en/api/rest) for token authentication and DocType routes. Stock validation still requires a warehouse and stock transaction; no workshop dataset is seeded automatically.
+An empty Item list means no permitted test Item was retrieved. See the [Frappe REST reference](https://docs.frappe.io/framework/user/en/api/rest) for token authentication and DocType routes. For items with stock, run `./scripts/seed-demo-data.sh` after the setup wizard (see README).
 
 The host-side MCP client will use `http://localhost:8080`. If a future MCP server is containerized on this Compose network, use `http://frontend:8080`, not container-local `localhost`. The configured frontend site header handles routing in both cases. Keep this stack local; remote hosting/TLS is outside this setup task.
 

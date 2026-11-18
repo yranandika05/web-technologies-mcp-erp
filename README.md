@@ -129,7 +129,9 @@ web-technologies-mcp-erp/
 │   ├── setup-erpnext.sh
 │   ├── start-erpnext.sh
 │   ├── stop-erpnext.sh
-│   └── reset-erpnext.sh
+│   ├── reset-erpnext.sh
+│   ├── seed-demo-data.sh
+│   └── setup-chat-widget.sh
 │
 ├── docs/
 │   ├── migration-ofbiz-to-erpnext.md
@@ -233,6 +235,14 @@ http://localhost:8080
 ```
 
 Log in using the configured administrator credentials and complete the ERPNext setup wizard if necessary.
+
+After the setup wizard, load the workshop demo data (30 items `MCP-EL-001` … `MCP-EL-030` from `docs/erpnext_dummy_items.csv` and their stock from `docs/Stock Entry - Demo Material Receipts.csv`):
+
+```bash
+./scripts/seed-demo-data.sh
+```
+
+The script is safe to run repeatedly: existing items and stock are kept. If the CSV warehouse `Stores - MCP` does not exist (e.g. German site: `Lagerräume - MCP`), the company's stores warehouse in the site language is used.
 
 ## Starting and stopping ERPNext
 
