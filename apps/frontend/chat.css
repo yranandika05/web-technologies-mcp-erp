@@ -112,6 +112,22 @@ h1 { margin: 0; font-size: 16px; }
 .message.error { align-self: flex-start; color: var(--error); background: var(--error-bg); border-color: transparent; }
 .message.pending { color: var(--muted); font-style: italic; }
 
+/* Assistant answers rendered from Markdown (markdown.js) */
+.message.markdown { white-space: normal; }
+.markdown > :first-child { margin-top: 0; }
+.markdown > :last-child { margin-bottom: 0; }
+.markdown p, .markdown ul, .markdown ol, .markdown pre, .markdown > div { margin: 0 0 8px; }
+.markdown ul, .markdown ol { padding-left: 20px; }
+.markdown h3, .markdown h4, .markdown h5, .markdown h6 { margin: 12px 0 6px; font-size: 14px; }
+.markdown code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; background: var(--code-bg); padding: 1px 4px; border-radius: 4px; }
+.markdown pre { background: var(--code-bg); padding: 8px; border-radius: var(--radius); overflow-x: auto; white-space: pre; }
+.markdown pre code { padding: 0; background: none; }
+.markdown > div { overflow-x: auto; }
+.markdown table { border-collapse: collapse; font-size: 12px; }
+.markdown th, .markdown td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; }
+.markdown th { background: var(--code-bg); }
+.markdown a { color: var(--accent); }
+
 /* Tool calls made via MCP while answering */
 .steps { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; white-space: normal; }
 .step { font-size: 12px; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; }

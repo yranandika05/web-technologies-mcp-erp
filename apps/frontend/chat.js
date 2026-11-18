@@ -1,6 +1,8 @@
 // Chat UI for the MCP chat host (apps/host). No build step: edit and reload.
 // The host is stateless – the UI keeps the conversation and sends it with every request.
 
+import { renderMarkdown } from './markdown.js';
+
 const messagesEl = document.querySelector('#messages');
 const form = document.querySelector('#form');
 const input = document.querySelector('#input');
@@ -49,7 +51,8 @@ async function send() {
     pending.remove();
     if (!response.ok) throw new Error(data.error ?? `HTTP ${response.status}`);
     history.push({ role: 'assistant', content: data.answer });
-    const message = addMessage('assistant', data.answer || '(keine Antwort)');
+    const message = addMessage('assistant markdown', '');
+    message.append(renderMarkdown(data.answer || '(keine Antwort)'));
     if (data.steps.length > 0) message.append(renderSteps(data.steps));
   } catch (error) {
     pending.remove();
