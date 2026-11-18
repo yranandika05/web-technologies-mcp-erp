@@ -90,3 +90,19 @@ test('unreachable endpoint and malformed responses become LlmErrors', async t =>
   await assert.rejects(new NimProvider({ baseUrl: nim.baseUrl, apiKey: 'k', model: 'm' }).complete([{ role: 'user', content: 'x' }], []), LlmError);
   await assert.rejects(new NimProvider({ baseUrl: 'http://127.0.0.1:1/v1', apiKey: 'k', model: 'm' }).complete([{ role: 'user', content: 'x' }], []), LlmError);
 });
+
+test('HTTP errors include the reason NIM sends, e.g. a retired model', async t => {
+  const detail = "The model 'old/model' has reached its end of life on 2026-08-26T09:00:00Z and is no longer available.";
+  const nim = await mockNim(req => req.body.model === 'old/model'
+    ? [410, { type: 'about:blank', title: 'Gone', status: 410, detail }]
+    : [400, { error: { message: 'Tool parsing failed' } }]);
+  t.after(nim.close);
+  const messages = [{ role: 'user', content: 'x' }];
+  await assert.rejects(new NimProvider({ baseUrl: nim.baseUrl, apiKey: 'k', model: 'old/model' }).complete(messages, tools), error => {
+    assert.match(error.message, /HTTP 410/);
+    assert.ok(error.message.includes(detail));
+    assert.match(error.message, /NIM_MODEL/);
+    return true;
+  });
+  await assert.rejects(new NimProvider({ baseUrl: nim.baseUrl, apiKey: 'k', model: 'm' }).complete(messages, tools), /HTTP 400.*Tool parsing failed/);
+});

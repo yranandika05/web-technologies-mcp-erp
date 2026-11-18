@@ -18,7 +18,7 @@ test('reads NIM settings and port from the environment', () => {
 test('uses the hosted NIM endpoint, default model and port 3000 when unset', () => {
   const config = readHostConfig({ NIM_API_KEY: 'nvapi-test' });
   assert.equal(config.nim.baseUrl, 'https://integrate.api.nvidia.com/v1');
-  assert.equal(config.nim.model, 'meta/llama-3.3-70b-instruct');
+  assert.equal(config.nim.model, 'nvidia/nemotron-3.5-lightning-30b-a3b');
   assert.equal(config.port, 3000);
 });
 

@@ -20,7 +20,8 @@ export interface HostConfig {
 }
 
 const HOSTED_NIM = 'https://integrate.api.nvidia.com/v1';
-const DEFAULT_MODEL = 'meta/llama-3.3-70b-instruct';
+// Must support tool calling. Hosted models get retired; see build.nvidia.com for current ones.
+const DEFAULT_MODEL = 'nvidia/nemotron-3.5-lightning-30b-a3b';
 
 /** Loads the repository root .env (works from src/ and dist/). Existing env values win. */
 export function loadRootEnv(): void {

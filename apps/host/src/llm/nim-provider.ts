@@ -33,8 +33,10 @@ export class NimProvider implements LlmProvider {
     if (!response.ok) {
       const hint = response.status === 401 || response.status === 403
         ? ' Check NIM_API_KEY.'
-        : response.status === 404 ? ' Check NIM_BASE_URL and NIM_MODEL.' : '';
-      throw new LlmError(`NIM request failed with HTTP ${response.status}.${hint}`);
+        : response.status === 404 ? ' Check NIM_BASE_URL and NIM_MODEL.'
+          : response.status === 410 ? ' The model is retired: choose another one in NIM_MODEL (build.nvidia.com).' : '';
+      const reason = await errorReason(response);
+      throw new LlmError(`NIM request failed with HTTP ${response.status}${reason ? `: ${reason}` : '.'}${hint}`);
     }
 
     let data: unknown;
@@ -95,4 +97,20 @@ function fromOpenAiToolCall(call: OpenAiToolCall): ToolCall {
     name: call.function.name,
     arguments: args && typeof args === 'object' && !Array.isArray(args) ? args as Record<string, unknown> : {},
   };
+}
+
+/**
+ * The reason NIM gives for a failed request, e.g. "The model … has reached its end of life".
+ * NIM answers with { detail } (problem+json) or the OpenAI style { error: { message } }.
+ */
+async function errorReason(response: Response): Promise<string> {
+  try {
+    const body = await response.json() as { detail?: unknown, message?: unknown, error?: { message?: unknown } | string };
+    const reason = body.detail ?? (typeof body.error === 'string' ? body.error : body.error?.message) ?? body.message;
+    if (typeof reason !== 'string') return '';
+    const text = reason.trim();
+    return text.length > 300 ? `${text.slice(0, 300)}…` : text;
+  } catch {
+    return '';
+  }
 }
