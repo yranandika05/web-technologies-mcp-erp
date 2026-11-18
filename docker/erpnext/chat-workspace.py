@@ -37,7 +37,7 @@ try:
         {
             "label": NAME,
             "title": NAME,
-            "module": "Custom",
+            "module": "Stock",  # v16 lists public workspaces in their module sidebar: Lager -> MCP Chat
             "type": "Workspace",
             "public": 1,
             "icon": "message",
@@ -45,14 +45,6 @@ try:
             "custom_blocks": [{"custom_block_name": NAME, "label": NAME}],
         },
     )
-
-    # v16 home screen: one Desktop Icon per workspace (same fields Frappe's own seeding uses).
-    if not frappe.db.exists("Desktop Icon", {"label": NAME, "icon_type": "Link"}):
-        icon = frappe.new_doc("Desktop Icon")
-        icon.update(
-            {"label": NAME, "icon_type": "Link", "link_type": "Workspace Sidebar", "link_to": NAME, "icon": "message"}
-        )
-        icon.insert(ignore_permissions=True, ignore_links=True)
 
     frappe.db.commit()
     print(f"Workspace '{NAME}' ready, iframe -> {CHAT_URL}")
